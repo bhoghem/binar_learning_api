@@ -27,7 +27,7 @@ swagger_config = {
             "route": '/docs.json'            
         }
     ],
-    "static_url_path":"/flashger_static",
+    "static_url_path":"/flasgger_static",
     "swagger_ui": True,
     "specs_route":"/docs/"
 }
@@ -35,12 +35,19 @@ swagger_config = {
 #Initialize swagger tamplate  & config
 swagger = Swagger(app, template=swagger_tamplate, config=swagger_config)
 
+@swag_from('docs/home.yml', methods=['GET'])
 @app.route('/', methods=['GET'])
 def home():
     return jsonify(
-        info="Api data cleansing"
+        info="Api data cleansing",
         status_code=200
     )
-   
+@swag_from('docs/clean.yml', methods=['POST'])
+@app.route('/text_clean_form', methods=['POST'])   
+def clean_text():
+    text= request.form.get('text')
+    cleaned_text= text.lower()
+    return jsonify(raw_text=text,cleaned_text=cleaned_text)
+
 if __name__ == '__main__':
     app.run(debug=True)
