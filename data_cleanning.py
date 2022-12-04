@@ -40,18 +40,8 @@ def preprocess(text):
     return text
 
 
-# Untuk Proses File CSV
-def process_csv(input_file):
-    first_column = input_file.iloc[:, 0]
-    print(first_column)
 
-    for tweet in first_column:
-        tweet_clean = preprocess(tweet)
-        query_tabel = "insert into tweet (tweet_kotor,tweet_bersih) values (?, ?)"
-        val = (tweet, tweet_clean)
-        mycursor.execute(query_tabel, val)
-        db.commit()
-        print(tweet)
+
 
 
 # Untuk Proses Text

@@ -2,7 +2,8 @@ import sqlite3
 import pandas as pd
 from flask import Flask, request, jsonify, make_response
 from flasgger import Swagger, swag_from, LazyJSONEncoder, LazyString
-from data_cleanning import process_csv, process_text
+from data_cleanning import process_text,preprocess
+from pathlib import Path
 
 
 #Initialize Flask API
@@ -18,6 +19,8 @@ db.row_factory = sqlite3.Row
 mycursor = db.cursor()
 
 
+db_path = Path(__file__).parent/'dataGold.db'
+conn= sqlite3.connect('db_path', check_same_thread=False)
 
 #Create Swagger config and tamplate
 
@@ -56,18 +59,34 @@ def home():
 @swag_from('docs/clean.yml', methods=['POST'])
 @app.route('/text_clean_form', methods=['POST'])   
 def clean_text():
-    text= request.form.get('text')
-    cleaned_text= process_text(text)
-    return jsonify(raw_text=text,cleaned_text=cleaned_text)
+    text = request.form.get('text')
+    cleaned_text= preprocess(text)
+    df_new= pd.DataFrame({'raw_text':[text],'cleaned_text':[cleaned_text]})
+    df_new.to_sql('text_cleaning',conn,if_exists='append',index=False)
+    json_response= {
+        'status_code': 200,
+        'description': "cleaning text from user",
+        'raw_data': text,
+        'clean_data': cleaned_text
+    }
+    response_data = jsonify(json_response)
+    return response_data
+    #return jsonify(raw_text=text,cleaned_text=cleaned_text)
 
 @swag_from("docs/upload.yml", methods=['POST'])
 @app.route('/Text_Processing_File', methods=['POST'])
-
 def post_file():
-    file = request.files[file]
-    df = pd.read_csv(file,encoding='utf-8')
-    process_csv(df)
-    return jsonify(json)
+    file = request.files.get('file')    
+    df = pd.read_csv(file,encoding='latin-1')
+    result= []
+    for text in df['Tweet']:
+        clean = preprocess(text)
+        result.append(clean)
+    raw=df['Tweet'].to_list()
+    df_new1= pd.DataFrame({'raw_text':raw, 'cleaned_text':result})
+    df_new1.to_sql('text_cleaning', conn, if_exists='append', index=False)
+    response_data = jsonify(df_new1.T.to_dict())
+    return response_data 
 
 
 if __name__ == '__main__':
