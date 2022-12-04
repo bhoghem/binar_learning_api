@@ -2,11 +2,22 @@ import sqlite3
 import pandas as pd
 from flask import Flask, request, jsonify, make_response
 from flasgger import Swagger, swag_from, LazyJSONEncoder, LazyString
+from data_cleanning import process_csv, process_text
+
 
 #Initialize Flask API
 app = Flask(__name__)
 # Assign JSON Encoder
 app.json_encoder = LazyJSONEncoder
+#For the return of JSON on the right Asc/Dsc
+app.config['JSON_SORT_KEYS'] = False  
+
+# Database
+db = sqlite3.connect('challenge.db', check_same_thread=False) 
+db.row_factory = sqlite3.Row
+mycursor = db.cursor()
+
+
 
 #Create Swagger config and tamplate
 
@@ -46,8 +57,18 @@ def home():
 @app.route('/text_clean_form', methods=['POST'])   
 def clean_text():
     text= request.form.get('text')
-    cleaned_text= text.lower()
+    cleaned_text= process_text(text)
     return jsonify(raw_text=text,cleaned_text=cleaned_text)
+
+@swag_from("docs/upload.yml", methods=['POST'])
+@app.route('/Text_Processing_File', methods=['POST'])
+
+def post_file():
+    file = request.files[file]
+    df = pd.read_csv(file,encoding='utf-8')
+    process_csv(df)
+    return jsonify(json)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
