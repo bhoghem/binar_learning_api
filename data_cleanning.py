@@ -9,6 +9,24 @@ q_kamusalay = "select * from kamusalay"
 t_kamusalay = pd.read_sql_query(q_kamusalay, db)
 
 
+def filterAbusive():
+    list_abusive = pd.read_csv('data_mentah/abusive.csv')
+    list_abusive = list_abusive['ABUSIVE'].str.lower().tolist()
+    return list_abusive
+
+def filterBadWord(val):
+    i = val
+    i = val.lower()
+    list_abusive = filterAbusive()
+    for j in list_abusive:
+        if j in i:
+            holder = i.replace(j, '*******')
+            val = holder
+            i = holder
+    print(val)
+    return val
+
+
 def lowercase(text):
     return text.lower()
 
@@ -37,6 +55,7 @@ def preprocess(text):
     text = remove_unnecessary_char(text) # 2
     text = remove_nonaplhanumeric(text) # 3
     text = normalize_alay(text)
+    text = filterBadWord(text)
     return text
 
 

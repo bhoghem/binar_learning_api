@@ -85,8 +85,9 @@ def post_file():
     raw=df['Tweet'].to_list()
     df_new1= pd.DataFrame({'raw_text':raw, 'cleaned_text':result})
     df_new1.to_sql('text_cleaning', conn, if_exists='append', index=False)
+    df_new1.to_csv('preprocess_data.csv', index=False)
     response_data = jsonify(df_new1.T.to_dict())
-    return response_data 
+    return response_data
 
 
 if __name__ == '__main__':
